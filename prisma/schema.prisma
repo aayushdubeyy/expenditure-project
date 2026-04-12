@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String   @id @default(uuid())
+  name             String
+  email            String   @unique
+  password         String
+
+  currency         String   @default("INR")
+  timezone         String   @default("Asia/Kolkata")
+
+  totalCreditLimit Float    @default(0) @map("total_credit_limit")
+
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt      @map("updated_at")
+
+  // relations
+  expenses         Expense[]
+  creditCards      CreditCard[]
+  creditLines      CreditLine[]
+  budgets          Budget[]
+  categories       Category[]
+  paymentMethods   PaymentMethod[]
+  incomes          Income[]
+
+  @@map("users")
+}
+
+model Category {
+  id       String  @id @default(uuid())
+  name     String
+  userId   String? @map("user_id")
+
+  user     User?     @relation(fields: [userId], references: [id])
+  expenses Expense[]
+  budgets  Budget[]
+
+  @@unique([name, userId])
+  @@map("categories")
+}
+
+model PaymentMethod {
+  id       Int     @id @default(autoincrement())
+  name     String
+  userId   String? @map("user_id")
+
+  user     User?     @relation(fields: [userId], references: [id])
+  expenses Expense[]
+
+  @@unique([name, userId])
+  @@map("payment_methods")
+}
+
+model Expense {
+  id               String   @id @default(uuid())
+
+  userId           String   @map("user_id")
+  user             User     @relation(fields: [userId], references: [id])
+
+  categoryId       String   @map("category_id")
+  category         Category @relation(fields: [categoryId], references: [id])
+
+  paymentMethodId  Int      @map("payment_method_id")
+  paymentMethod    PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+
+  creditCardId     String?  @map("credit_card_id")
+  creditCard       CreditCard? @relation(fields: [creditCardId], references: [id])
+
+  title            String
+  amount           Float
+
+  date             DateTime
+  notes            String?
+
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt      @map("updated_at")
+  deletedAt        DateTime?                @map("deleted_at")
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([paymentMethodId])
+  @@index([creditCardId])
+  @@index([date])
+
+  @@map("expenses")
+}
+
+model Income {
+  id         String   @id @default(uuid())
+
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id])
+
+  amount     Float
+  source     String
+
+  date       DateTime
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([date])
+
+  @@map("incomes")
+}
+
+model Budget {
+  id         String   @id @default(uuid())
+
+  userId     String   @map("user_id")
+  categoryId String?  @map("category_id")
+
+  amount     Float
+  month      Int
+  year       Int
+
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt      @map("updated_at")
+
+  user       User      @relation(fields: [userId], references: [id])
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  @@unique([userId, categoryId, month, year])
+
+  @@map("budgets")
+}
+
+model CreditLine {
+  id           String   @id @default(uuid())
+
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+
+  name         String
+  totalLimit   Float    @map("total_limit")
+  currentUsage Float    @default(0) @map("current_usage")
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt      @map("updated_at")
+
+  creditCards  CreditCard[]
+
+  @@index([userId])
+
+  @@map("credit_lines")
+}
+
+model CreditCard {
+  id            String   @id @default(uuid())
+
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+
+  creditLineId  String?  @map("credit_line_id")
+  creditLine    CreditLine? @relation(fields: [creditLineId], references: [id])
+
+  name          String
+  limit         Float?
+  billCycleDay  Int      @map("bill_cycle_day")
+  lastBillDate  DateTime? @map("last_bill_date")
+
+  currentUsage  Float    @default(0) @map("current_usage")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  expenses      Expense[]
+
+  @@index([userId])
+  @@index([creditLineId])
+
+  @@map("credit_cards")
+}
