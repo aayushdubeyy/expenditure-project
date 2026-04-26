@@ -6,8 +6,12 @@ import { expenseTypeDefs } from "../modules/expense/expense.types";
 import { expenseResolver } from "../modules/expense/expense.resolver";
 import { categoryTypeDefs } from "../modules/category/category.types";
 import { categoryResolver } from "../modules/category/category.resolver";
+import { creditCardTypeDefs } from "../modules/creditCard/credit_card.types";
+import { creditLineTypeDefs } from "../modules/creditCard/credit_line.types";
+import { creditCardResolver } from "../modules/creditCard/credit_card.resolver";
+import { creditLineResolver } from "../modules/creditCard/credit_line.resolver";
 
 export const schema = createSchema({
-    typeDefs: [authTypeDefs, expenseTypeDefs, categoryTypeDefs],
-    resolvers: [authResolver, expenseResolver, categoryResolver],
+    typeDefs: [authTypeDefs, expenseTypeDefs, categoryTypeDefs, creditCardTypeDefs, creditLineTypeDefs],
+    resolvers: [authResolver, expenseResolver, categoryResolver, creditCardResolver, creditLineResolver],
 });
