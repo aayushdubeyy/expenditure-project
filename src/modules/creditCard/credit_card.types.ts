@@ -2,11 +2,10 @@ export const creditCardTypeDefs = /* GraphQL */ `
     type CreditCard {
         id: ID!
         name: String!
-        limit: Float
         billCycleDay: Int!
+        limit: Float
         currentUsage: Float!
         creditLineId: ID
-        createdAt: String!
     }
 
     extend type Query {
@@ -20,5 +19,11 @@ export const creditCardTypeDefs = /* GraphQL */ `
             limit: Float
             creditLineId: ID
         ): CreditCard!
+
+        payCreditCard(
+            creditCardId: ID!
+            amount: Float!
+            date: String!
+        ): Boolean!
     }
 `;

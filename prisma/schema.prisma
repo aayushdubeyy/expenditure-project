@@ -25,6 +25,7 @@ model User {
   expenses         Expense[]
   creditCards      CreditCard[]
   creditLines      CreditLine[]
+  creditCardPayments CreditCardPayment[] 
   budgets          Budget[]
   categories       Category[]
   paymentMethods   PaymentMethod[]
@@ -170,9 +171,31 @@ model CreditCard {
   createdAt     DateTime @default(now()) @map("created_at")
 
   expenses      Expense[]
+  payments      CreditCardPayment[]  
 
   @@index([userId])
   @@index([creditLineId])
 
   @@map("credit_cards")
+}
+
+model CreditCardPayment {
+  id            String   @id @default(uuid())
+
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+
+  creditCardId  String   @map("credit_card_id")
+  creditCard    CreditCard @relation(fields: [creditCardId], references: [id])
+
+  amount        Float
+  date          DateTime
+
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([creditCardId])
+  @@index([date])
+
+  @@map("credit_card_payments")
 }
