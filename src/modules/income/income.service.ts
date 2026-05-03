@@ -8,12 +8,7 @@ export const createIncomeService = async ({ userId, input }: {
     if (amount <= 0) throw new Error("Amount must be greater than 0");
 
     return prisma.income.create({
-        data: {
-            userId,
-            amount,
-            source,
-            date,
-        },
+        data: {userId, amount, source, date },
     });
 };
 

@@ -32,12 +32,14 @@ export const expenseTypeDefs = /* GraphQL */ `
 
     type CategoryBreakdown {
         categoryId: ID!
+        categoryName: String!
         total: Float!
         percentage: Float!
     }
 
     type PaymentMethodBreakdown {
         paymentMethodId: Int!
+        paymentMethodName: String!
         total: Float!
         percentage: Float!
     }

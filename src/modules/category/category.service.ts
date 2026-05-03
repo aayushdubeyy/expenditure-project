@@ -2,10 +2,7 @@ import { prisma } from "../../lib/prisma";
 
 export const createCategoryService = async (userId: string | null, name: string) => {
     return prisma.category.create({
-        data: {
-            name,
-            userId,
-        },
+        data: { name, userId },
     });
 };
 
@@ -17,8 +14,6 @@ export const getCategoriesService = async (userId: string) => {
                 { userId: userId },   // user-specific
             ],
         },
-        orderBy: {
-            name: "asc",
-        },
+        orderBy: { name: "asc" },
     });
 };

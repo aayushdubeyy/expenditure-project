@@ -1,7 +1,9 @@
 export const dashboardTypeDefs = /* GraphQL */ `
   type TopCategory {
     categoryId: ID!
+    categoryName: String!
     total: Float!
+    percentage: Float!
   }
 
   type CreditUtilization {
