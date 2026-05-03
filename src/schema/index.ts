@@ -10,8 +10,12 @@ import { creditCardTypeDefs } from "../modules/creditCard/credit_card.types";
 import { creditLineTypeDefs } from "../modules/creditCard/credit_line.types";
 import { creditCardResolver } from "../modules/creditCard/credit_card.resolver";
 import { creditLineResolver } from "../modules/creditCard/credit_line.resolver";
+import { incomeTypeDefs } from "../modules/income/income.types";
+import { incomeResolver } from "../modules/income/income.resolver";
+import { dashboardTypeDefs } from "../modules/dashboard/dashboard.types";
+import { dashboardResolver } from "../modules/dashboard/dashboard.resolver";
 
 export const schema = createSchema({
-    typeDefs: [authTypeDefs, expenseTypeDefs, categoryTypeDefs, creditCardTypeDefs, creditLineTypeDefs],
-    resolvers: [authResolver, expenseResolver, categoryResolver, creditCardResolver, creditLineResolver],
+    typeDefs: [authTypeDefs, expenseTypeDefs, categoryTypeDefs, creditCardTypeDefs, creditLineTypeDefs, incomeTypeDefs, dashboardTypeDefs],
+    resolvers: [authResolver, expenseResolver, categoryResolver, creditCardResolver, creditLineResolver, incomeResolver, dashboardResolver],
 });

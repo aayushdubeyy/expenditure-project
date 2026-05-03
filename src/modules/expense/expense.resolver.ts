@@ -1,5 +1,5 @@
 import { validateString } from "../../utils/string_operations";
-import { createExpenseService } from "./expense.service";
+import { createExpenseService, getExpensesService, getMonthlySummaryService } from "./expense.service";
 
 export const expenseResolver = {
     Mutation: {
@@ -31,5 +31,20 @@ export const expenseResolver = {
                 },
             });
         },
+    },
+    Query: {
+        getExpenses: async (_: any, args: any, ctx: any) => {
+            if (!ctx.userId) throw new Error("Unauthorized");
+            return getExpensesService(ctx.userId, args.filter);
+        },
+        monthlySummary: async (_: any, args: any, ctx: any) => {
+            if (!ctx.userId) throw new Error("Unauthorized");
+            const { month, year } = args;
+
+            if (month < 1 || month > 12) throw new Error("Invalid month");
+            if (year < 2000 || year > 2100) throw new Error("Invalid year");
+
+            return getMonthlySummaryService(ctx.userId, month, year);
+        }
     },
 };

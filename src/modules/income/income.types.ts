@@ -7,15 +7,17 @@ export const incomeTypeDefs = /* GraphQL */ `
         createdAt: String!
     }
 
+    input CreateIncomeInput {
+        amount: Float!
+        source: String!
+        date: String!
+    }
+
     extend type Query {
         getIncomes: [Income!]!
     }
 
     extend type Mutation {
-        createIncome(
-            amount: Float!
-            source: String!
-            date: String!
-        ): Income!
+        createIncome(input: CreateIncomeInput!): Income!
     }
 `;
