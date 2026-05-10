@@ -50,11 +50,18 @@ export const expenseTypeDefs = /* GraphQL */ `
         paymentMethodBreakdown: [PaymentMethodBreakdown!]!
     }
 
+    type YearlySummary {
+        totalSpent: Float!
+        categoryBreakdown: [CategoryBreakdown!]!
+        paymentMethodBreakdown: [PaymentMethodBreakdown!]!
+    }
+
     extend type Mutation {
         createExpense(input: CreateExpenseInput!): Expense!
     }
     extend type Query {
         getExpenses(filter: ExpenseFilterInput): [Expense!]!
         monthlySummary(month: Int!, year: Int!): MonthlySummary!
+        yearlySummary(year: Int!): YearlySummary!
     }
 `;

@@ -30,6 +30,7 @@ model User {
   categories       Category[]
   paymentMethods   PaymentMethod[]
   incomes          Income[]
+  alerts           Alert[]
 
   @@map("users")
 }
@@ -198,4 +199,24 @@ model CreditCardPayment {
   @@index([date])
 
   @@map("credit_card_payments")
+}
+
+model Alert {
+  id          String   @id @default(uuid())
+
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+
+  type        String
+  title       String
+  message     String
+
+  read        Boolean  @default(false)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([read])
+
+  @@map("alerts")
 }

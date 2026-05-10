@@ -1,28 +1,27 @@
 import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
-import { getMonthRange, getTotalExpense } from "../common";
+import { getMonthRange, getTotalExpense, getYearRange } from "../common";
 
-export const createExpenseService = async ({ userId, input }: {
-  userId: string;
-  input: {
-    title: string;
-    amount: number;
-    categoryId: string;
-    paymentMethodId: number;
-    creditCardId?: string;
-    date: Date;
-    notes?: string;
-  };
-}) => {
+interface createExpenseServ {
+    userId: string;
+    input: {
+        title: string;
+        amount: number;
+        categoryId: string;
+        paymentMethodId: number;
+        creditCardId?: string;
+        date: Date;
+        notes?: string;
+    };
+}
+
+export const createExpenseService = async ({ userId, input }: createExpenseServ) => {
     const validated = await validateExpenseInput(userId, input);
 
     return prisma.$transaction(async (tx) => {
         const card = await getCreditCardIfNeeded(tx, userId, validated.creditCardId);
         const expense = await createExpense(tx, userId, validated);
-
-        if (card) {
-            await updateCreditUsage(tx, card, validated.amount);
-        }
+        if (card) await updateCreditUsage(tx, userId, card, validated.amount);
 
         return expense;
     });
@@ -53,18 +52,71 @@ const createExpense = async (tx: Prisma.TransactionClient, userId: string, input
     });
 };
 
-const updateCreditUsage = async (tx: Prisma.TransactionClient, card: any, amount: number) => {
-    await tx.creditCard.update({
-        where: { id: card.id },
-        data: { currentUsage: { increment: amount } },
+const updateCreditUsage = async (tx: Prisma.TransactionClient, userId: string, card: any, amount: number) => {
+    await incrementCardUsage(tx, card.id, amount);
+
+    if (!card.creditLineId) return;
+
+    const updatedLine = await incrementCreditLineUsage(tx, card.creditLineId, amount);
+    await handleCreditUtilizationAlert(tx, userId, updatedLine);
+};
+
+const incrementCardUsage = async (tx: Prisma.TransactionClient, cardId: string, amount: number) => {
+    return tx.creditCard.update({
+        where: { id: cardId },
+        data: {
+            currentUsage: { increment: amount },
+        },
+    });
+};
+
+const incrementCreditLineUsage = async (tx: Prisma.TransactionClient, creditLineId: string, amount: number) => {
+    return tx.creditLine.update({
+        where: { id: creditLineId },
+        data: {
+            currentUsage: { increment: amount },
+        },
+    });
+};
+
+const handleCreditUtilizationAlert = async (tx: Prisma.TransactionClient, userId: string, creditLine: any) => {
+    const utilization = calculateUtilizationPercentage(creditLine.currentUsage, creditLine.totalLimit);
+    if (utilization <= 30) return;
+
+    const hasUnreadAlert = await hasUnreadUtilizationAlert(tx, userId);
+    if (hasUnreadAlert) return;
+
+    await createUtilizationAlert(tx, userId, utilization);
+};
+
+const calculateUtilizationPercentage = (currentUsage: number, totalLimit: number) => {
+    if (totalLimit === 0) return 0;
+    return (currentUsage / totalLimit) * 100;
+};
+
+const hasUnreadUtilizationAlert = async (tx: Prisma.TransactionClient, userId: string) => {
+    const alert = await tx.alert.findFirst({
+        where: {
+            userId,
+            type: "CREDIT_UTILIZATION",
+            read: false,
+        },
     });
 
-    if (card.creditLineId) {
-        await tx.creditLine.update({
-            where: { id: card.creditLineId },
-            data: { currentUsage: { increment: amount } },
-        });
-    }
+    return !!alert;
+};
+
+const createUtilizationAlert = async (tx: Prisma.TransactionClient, userId: string, utilization: number) => {
+    return tx.alert.create({
+        data: {
+            userId,
+            type: "CREDIT_UTILIZATION",
+            title: "High Credit Utilization",
+            message:
+                `Your credit utilization exceeded 30%. ` +
+                `Current utilization: ${utilization.toFixed(2)}%`,
+        },
+    });
 };
 
 const getCreditCardIfNeeded = async (tx: Prisma.TransactionClient, userId: string, creditCardId?: string) => {
@@ -115,6 +167,21 @@ export const getMonthlySummaryService = async (userId: string, month: number, ye
         getCategoryBreakdown(userId, startDate, endDate, totalSpent),
         getPaymentMethodBreakdown(userId, startDate, endDate, totalSpent),
     ]);
+
+    return { totalSpent, categoryBreakdown, paymentMethodBreakdown };
+};
+
+export const getYearlySummaryService = async (userId: string, year: number) => {
+    const { startDate, endDate } = getYearRange(year);
+
+    const totalSpent = await getTotalExpense(userId, startDate, endDate);
+    if (totalSpent === 0) return { totalSpent: 0, categoryBreakdown: [], paymentMethodBreakdown: [] };
+
+    const [categoryBreakdown, paymentMethodBreakdown] =
+        await Promise.all([
+            getCategoryBreakdown(userId, startDate, endDate, totalSpent),
+            getPaymentMethodBreakdown(userId, startDate, endDate, totalSpent),
+        ]);
 
     return { totalSpent, categoryBreakdown, paymentMethodBreakdown };
 };

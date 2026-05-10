@@ -18,3 +18,10 @@ export const getMonthRange = (month: number, year: number) => {
     const endDate = new Date(year, month, 1);
     return { startDate, endDate };
 };
+
+export const getYearRange = (year: number) => {
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year + 1, 0, 1);
+
+    return { startDate, endDate };
+};
